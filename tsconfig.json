@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": [
+      "es2015",
+      "esnext.asynciterable"
+    ],
+    "jsx": "react-native",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "extends": "expo/tsconfig.base",
+  "paths": {
+    "@components/*": ["src/components/*"],
+    "@constants/*": ["src/constants/*"],
+    "@hooks/*": ["src/hooks/*"],
+    "@interfaces/*": ["src/interfaces/*"],
+    "@services/*": ["src/services/*"],
+    "@styles/*": ["src/styles/*"],
+    "@utils/*": ["src/utils/*"]
+  }
+}
