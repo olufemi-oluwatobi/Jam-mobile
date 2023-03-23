@@ -4,21 +4,18 @@ import {
   BottomTabNavigationProp,
 } from "@react-navigation/bottom-tabs";
 import HomeScreen from "./home";
+import RecordScreen from "./record";
+import ProfileScreen from "./userProfile";
 import { Ionicons } from "@expo/vector-icons";
 import { View, Text } from "react-native";
+import { MainStackParamList } from "../../interfaces";
 
-type MainScreenParamList = {
-  Home: undefined;
-  People: undefined;
-  Votes: undefined;
-  Music: undefined;
-};
-
-const Tab = createBottomTabNavigator<MainScreenParamList>();
+const Tab = createBottomTabNavigator<MainStackParamList>();
 
 const icons = {
   Home: ["ios-home", "ios-home-outline"],
   People: ["ios-people", "ios-people-outline"],
+  Record: ["ios-people", "ios-people-outline"],
   Votes: ["ios-checkmark-circle", "ios-checkmark-circle-outline"],
   Music: ["ios-musical-notes", "ios-musical-notes-outline"],
 };
@@ -32,6 +29,7 @@ const VotesScreen = () => {
 };
 
 const MainScreen: FC = () => {
+  // let previousRouteName: keyof MainStackParamList | undefined = undefined;
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -58,6 +56,22 @@ const MainScreen: FC = () => {
         }}
         name="People"
         component={VotesScreen}
+      />
+      <Tab.Screen
+        options={{
+          headerShown: false,
+          tabBarButton: () => null,
+        }}
+        name="Record"
+        component={RecordScreen}
+      />
+      <Tab.Screen
+        options={{
+          headerShown: false,
+          tabBarButton: () => null,
+        }}
+        name="Profile"
+        component={ProfileScreen}
       />
       <Tab.Screen
         options={{

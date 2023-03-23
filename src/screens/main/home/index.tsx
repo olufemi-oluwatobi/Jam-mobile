@@ -1,5 +1,6 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
+import { MainScreenProps } from "../../../interfaces";
 import useTheme from "../../../hooks/useTheme";
 import { useAuth } from "../../../hooks/useAuth";
 import Header from "../../../components/layout/Header";
@@ -9,7 +10,7 @@ import { ScrollView } from "native-base";
 
 type HomeProps = {};
 
-const Home: React.FC<HomeProps> = () => {
+const Home: React.FC<MainScreenProps> = ({ navigation }) => {
   const theme = useTheme();
   const { user } = useAuth();
 
@@ -159,10 +160,44 @@ const Home: React.FC<HomeProps> = () => {
           activeColor={theme.colors.brand}
         />
         <View style={styles.segmentWrapper}>
-          <Segment text="Favorite Artists" data={favoriteArtists} />
-          <Segment text="Playlists of the Week" data={playlistsOfTheWeek} />
-          <Segment text="Top Chart Albums" data={topChartAlbums} />
-          <Segment text="Favorite Artists" data={favoriteArtists} />
+          <Segment
+            style={{
+              headerStyle: { paddingLeft: 20 },
+              contentStyle: { paddingLeft: 20 },
+            }}
+            onItemPress={(item) => navigation.navigate("Record", { item })}
+            text="Favorite Artists"
+            data={favoriteArtists}
+          />
+          <Segment
+            style={{
+              headerStyle: { paddingLeft: 20 },
+              wrapperStyle: { marginTop: 20 },
+
+              contentStyle: { paddingLeft: 20 },
+            }}
+            text="Playlists of the Week"
+            data={playlistsOfTheWeek}
+          />
+          <Segment
+            style={{
+              headerStyle: { paddingLeft: 20 },
+              wrapperStyle: { marginTop: 20 },
+
+              contentStyle: { paddingLeft: 20 },
+            }}
+            text="Top Chart Albums"
+            data={topChartAlbums}
+          />
+          <Segment
+            style={{
+              headerStyle: { paddingLeft: 20 },
+              contentStyle: { paddingLeft: 20 },
+              wrapperStyle: { marginTop: 20 },
+            }}
+            text="Favorite Artists"
+            data={favoriteArtists}
+          />
         </View>
       </View>
     </ScrollView>
@@ -172,12 +207,11 @@ const Home: React.FC<HomeProps> = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1A1423",
+    backgroundColor: "#000",
     position: "relative",
   },
   segmentWrapper: {
     marginTop: 20,
-    padding: 20,
   },
 });
 

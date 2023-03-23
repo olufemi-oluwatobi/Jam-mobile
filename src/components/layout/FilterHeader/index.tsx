@@ -4,7 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  TouchableHighlight,
   Animated,
 } from "react-native";
 import useTheme from "../../../hooks/useTheme";
@@ -55,7 +55,7 @@ const FilterHeader: React.FC<Props> = ({
         }
       >
         {filters.map(({ key, ...filter }) => (
-          <TouchableOpacity
+          <TouchableHighlight
             key={key}
             style={[
               styles.filterButton,
@@ -78,7 +78,7 @@ const FilterHeader: React.FC<Props> = ({
             >
               {filter.text}
             </Text>
-          </TouchableOpacity>
+          </TouchableHighlight>
         ))}
       </ScrollView>
     </Animated.View>

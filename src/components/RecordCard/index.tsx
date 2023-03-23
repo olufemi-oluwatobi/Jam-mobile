@@ -6,8 +6,9 @@ import {
   Image,
   Animated,
   Platform,
+  ViewStyle,
 } from "react-native";
-import { TouchableOpacity } from "react-native";
+import { TouchableHighlight } from "react-native";
 import useTheme from "../../hooks/useTheme";
 
 type Props = {
@@ -15,6 +16,8 @@ type Props = {
   variant: "md" | "lg" | "xl";
   recordName: string;
   recordCreator: string;
+  style?: ViewStyle;
+  onItemPress?: () => void;
 };
 
 const RecordsDisplay: React.FC<Props> = ({
@@ -22,6 +25,8 @@ const RecordsDisplay: React.FC<Props> = ({
   variant,
   recordName,
   recordCreator,
+  style,
+  onItemPress,
 }) => {
   const theme = useTheme();
   const scale = useMemo(() => new Animated.Value(1), []);
@@ -42,6 +47,7 @@ const RecordsDisplay: React.FC<Props> = ({
       duration: 150,
       useNativeDriver: true,
     }).start();
+    onItemPress && onItemPress();
   };
 
   // handle press out event
@@ -54,13 +60,15 @@ const RecordsDisplay: React.FC<Props> = ({
   };
 
   return (
-    <TouchableOpacity
+    <TouchableHighlight
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       activeOpacity={1}
       style={styles.touchable}
     >
-      <Animated.View style={[styles.container, { transform: [{ scale }] }]}>
+      <Animated.View
+        style={[styles.container, { transform: [{ scale }] }, style]}
+      >
         <Image
           source={{ uri: image }}
           style={[
@@ -86,7 +94,7 @@ const RecordsDisplay: React.FC<Props> = ({
           {recordCreator}
         </Text>
       </Animated.View>
-    </TouchableOpacity>
+    </TouchableHighlight>
   );
 };
 

@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableHighlight,
+  Image,
+} from "react-native";
 import {
   Dimensions,
   TouchableWithoutFeedback,
@@ -201,7 +207,7 @@ const LoginPage = (props: AuthScreenProps) => {
                     justifyContent: "space-between",
                   }}
                 >
-                  <TouchableOpacity style={styles.socialSigninButton}>
+                  <TouchableHighlight style={styles.socialSigninButton}>
                     <VStack
                       style={{
                         flexDirection: "row",
@@ -236,8 +242,8 @@ const LoginPage = (props: AuthScreenProps) => {
                         Google
                       </Text>
                     </VStack>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.socialSigninButton}>
+                  </TouchableHighlight>
+                  <TouchableHighlight style={styles.socialSigninButton}>
                     <VStack
                       style={{
                         flexDirection: "row",
@@ -260,25 +266,25 @@ const LoginPage = (props: AuthScreenProps) => {
                         Spotify
                       </Text>
                     </VStack>
-                  </TouchableOpacity>
+                  </TouchableHighlight>
                 </View>
               </View>
-              <TouchableOpacity
+              <TouchableHighlight
                 style={styles.loginButton}
                 onPress={() => form.handleSubmit()}
               >
                 <Text style={styles.loginButtonText}>Login</Text>
-              </TouchableOpacity>
+              </TouchableHighlight>
               <View style={styles.signupPromptContainer}>
                 <Text style={styles.signupPromptText}>
                   Don't have an account?
                 </Text>
-                <TouchableOpacity
+                <TouchableHighlight
                   onPress={() => props.navigation.navigate("Signup")}
                   style={styles.signupPromptButton}
                 >
                   <Text style={styles.signupPromptButton}>Sign up</Text>
-                </TouchableOpacity>
+                </TouchableHighlight>
               </View>
             </View>
           </View>

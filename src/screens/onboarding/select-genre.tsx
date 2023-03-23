@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
+  TouchableHighlight,
   ScrollView,
   Image,
   Dimensions,
@@ -55,9 +55,9 @@ const Genre = ({
   });
 
   return (
-    <TouchableOpacity style={styles.genreButton} onPress={onPress}>
+    <TouchableHighlight style={styles.genreButton} onPress={onPress}>
       <Text style={styles.genreText}>{genreName}</Text>
-    </TouchableOpacity>
+    </TouchableHighlight>
   );
 };
 
@@ -163,7 +163,7 @@ const SelectFavouriteGenres = (props: OnboardingScreenProps) => {
           paddingRight: 20,
         }}
       >
-        <TouchableOpacity
+        <TouchableHighlight
           onPress={() => props.navigation.navigate("SelectFavouriteArtists")}
           style={styles.mainButton}
         >
@@ -183,7 +183,7 @@ const SelectFavouriteGenres = (props: OnboardingScreenProps) => {
               d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
             />
           </Svg>
-        </TouchableOpacity>
+        </TouchableHighlight>
       </View>
     </View>
   );

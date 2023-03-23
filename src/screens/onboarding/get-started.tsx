@@ -1,5 +1,11 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableHighlight,
+} from "react-native";
 import {
   Dimensions,
   TouchableWithoutFeedback,
@@ -132,7 +138,7 @@ const LoginPage = (props: OnboardingScreenProps) => {
                   fellow connoisseurs
                 </Text>
               </VStack>
-              <TouchableOpacity
+              <TouchableHighlight
                 onPress={() => props.navigation.navigate("ConnectStreamApp")}
                 style={styles.mainButton}
               >
@@ -152,7 +158,7 @@ const LoginPage = (props: OnboardingScreenProps) => {
                     d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
                   />
                 </Svg>
-              </TouchableOpacity>
+              </TouchableHighlight>
             </View>
           </View>
         </ScrollView>

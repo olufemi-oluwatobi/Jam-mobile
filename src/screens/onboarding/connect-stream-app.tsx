@@ -4,7 +4,7 @@ import {
   Text,
   StyleSheet,
   Image,
-  TouchableOpacity,
+  TouchableHighlight,
   Dimensions,
 } from "react-native";
 import { OnboardingScreenProps } from "../../interfaces";
@@ -142,12 +142,12 @@ const ConnectStreamApp = ({ navigation }: OnboardingScreenProps) => {
           />
         ))}
       </View>
-      <TouchableOpacity
+      <TouchableHighlight
         onPress={() => navigation.navigate("SelectFavouriteGenres")}
         style={styles.mainButton}
       >
         <Text style={styles.mainButtonText}>Connect</Text>
-      </TouchableOpacity>
+      </TouchableHighlight>
     </View>
   );
 };

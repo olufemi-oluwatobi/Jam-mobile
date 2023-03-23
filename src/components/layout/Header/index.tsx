@@ -5,7 +5,7 @@ import {
   Text,
   StyleSheet,
   Image,
-  TouchableOpacity,
+  TouchableHighlight,
   StatusBar,
 } from "react-native";
 import useTheme from "../../../hooks/useTheme";
@@ -39,7 +39,7 @@ const Header: React.FC<HeaderProps> = ({ avatar, headerText }) => {
           </Text>
         </View>
         <View style={styles.right}>
-          <TouchableOpacity style={[styles.iconButton, { marginRight: 10 }]}>
+          <TouchableHighlight style={[styles.iconButton, { marginRight: 10 }]}>
             <Svg
               fill="none"
               viewBox="0 0 24 24"
@@ -54,13 +54,13 @@ const Header: React.FC<HeaderProps> = ({ avatar, headerText }) => {
                 d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607z"
               />
             </Svg>
-          </TouchableOpacity>
-          <TouchableOpacity
+          </TouchableHighlight>
+          <TouchableHighlight
             style={styles.iconButton}
             onPress={toggleNotification}
           >
             <NotificationIndicator count={notifications.length} />
-          </TouchableOpacity>
+          </TouchableHighlight>
         </View>
       </View>
     </>

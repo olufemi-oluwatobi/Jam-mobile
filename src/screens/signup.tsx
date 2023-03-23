@@ -4,7 +4,7 @@ import {
   Text,
   TextInput,
   StyleSheet,
-  TouchableOpacity,
+  TouchableHighlight,
   Image,
 } from "react-native";
 import { AuthScreenProps } from "../interfaces";
@@ -206,14 +206,14 @@ const LoginPage = (props: AuthScreenProps) => {
                 value={form.values.password}
               />
 
-              <TouchableOpacity
+              <TouchableHighlight
                 style={styles.loginButton}
                 onPress={() => form.handleSubmit()}
               >
                 <Text style={styles.loginButtonText}>
                   {isLoading ? "Loading" : "Sign Up"}
                 </Text>
-              </TouchableOpacity>
+              </TouchableHighlight>
 
               <PageDivider />
 
@@ -231,7 +231,7 @@ const LoginPage = (props: AuthScreenProps) => {
                     justifyContent: "space-between",
                   }}
                 >
-                  <TouchableOpacity style={styles.socialSigninButton}>
+                  <TouchableHighlight style={styles.socialSigninButton}>
                     <VStack
                       style={{
                         flexDirection: "row",
@@ -266,8 +266,8 @@ const LoginPage = (props: AuthScreenProps) => {
                         Google
                       </Text>
                     </VStack>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.socialSigninButton}>
+                  </TouchableHighlight>
+                  <TouchableHighlight style={styles.socialSigninButton}>
                     <VStack
                       style={{
                         flexDirection: "row",
@@ -282,15 +282,15 @@ const LoginPage = (props: AuthScreenProps) => {
                         />
                       </Svg>
                       <Text
-                        style={{
-                          ...styles.socialSigninButton.text,
-                          marginLeft: 10,
-                        }}
+                        style={[
+                          styles.socialSigninButton.text,
+                          { marginLeft: 10 },
+                        ]}
                       >
                         Spotify
                       </Text>
                     </VStack>
-                  </TouchableOpacity>
+                  </TouchableHighlight>
                 </View>
               </View>
 
@@ -298,12 +298,12 @@ const LoginPage = (props: AuthScreenProps) => {
                 <Text style={styles.signupPromptText}>
                   Already have an account?
                 </Text>
-                <TouchableOpacity
+                <TouchableHighlight
                   onPress={() => props.navigation.navigate("Login")}
                   style={styles.signupPromptButton}
                 >
                   <Text style={styles.signupPromptButton}>Login</Text>
-                </TouchableOpacity>
+                </TouchableHighlight>
               </View>
             </View>
           </View>
