@@ -14,9 +14,14 @@ import NotificationIndicator from "../NotificationIndicator";
 type HeaderProps = {
   avatar: any;
   headerText: string;
+  onImageClick?: () => void;
 };
 
-const Header: React.FC<HeaderProps> = ({ avatar, headerText }) => {
+const Header: React.FC<HeaderProps> = ({
+  avatar,
+  headerText,
+  onImageClick,
+}) => {
   const theme = useTheme();
   const notifications = [];
   const [showNotification, setShowNotification] = useState(true);
@@ -33,7 +38,9 @@ const Header: React.FC<HeaderProps> = ({ avatar, headerText }) => {
       />
       <View style={styles.container}>
         <View style={styles.left}>
-          <Image source={{ uri: avatar }} style={styles.avatar} />
+          <TouchableHighlight onPress={() => onImageClick && onImageClick()}>
+            <Image source={{ uri: avatar }} style={styles.avatar} />
+          </TouchableHighlight>
           <Text style={[styles.headerText, { color: theme.colors.white }]}>
             {headerText}
           </Text>

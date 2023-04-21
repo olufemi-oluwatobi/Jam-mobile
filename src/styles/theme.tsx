@@ -53,7 +53,7 @@ export type Theme = {
 const palette = {
   purple: "#5A31F4",
   green: "#0ECD9D",
-  red: "#CD0E61",
+  red: "#ff0000",
   black: "#000",
   darkGrey: "#232b2b",
   grey: "#B7B7B7",

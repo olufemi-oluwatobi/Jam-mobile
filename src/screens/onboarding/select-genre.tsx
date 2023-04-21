@@ -1,4 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
+import axios from "axios";
+import _ from "lodash";
+import useGenre, { Genre } from "../../hooks/useGenre";
 import {
   View,
   Text,
@@ -10,12 +13,21 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { OnboardingScreenProps } from "../../interfaces";
+import { useAuth } from "../../hooks/useAuth";
 import { Svg, Path } from "react-native-svg";
 import { Progress, VStack } from "native-base";
 import { Theme } from "../../styles/theme";
 import useTheme from "../../hooks/useTheme";
+import { BASE_URL } from "../../constants";
 
-const Genre = ({
+const numGenrePerRow = (size: number) => {
+  const screenWidth = Dimensions.get("window").width;
+  const maxNumGenres = Math.floor(screenWidth / size);
+  const actualSize = screenWidth / maxNumGenres;
+  return { numPerRow: maxNumGenres, size: actualSize };
+};
+
+const GenreComponent = ({
   genreName,
   size,
   selected,
@@ -64,41 +76,101 @@ const Genre = ({
 const SelectFavouriteGenres = (props: OnboardingScreenProps) => {
   const theme = useTheme();
   const styles = createStyles(theme);
+  const [isLoading, setLoading] = useState(false);
   const { width } = useWindowDimensions();
-  const genres = [
-    "Pop",
-    "Rock",
-    "Hip Hop",
-    "Jazz",
-    "Classical",
-    "Metal",
-    "Blues",
-    "Country",
-    "Electronic",
-    "Reggae",
-    "Latin",
-    "R&B",
-    "Soul",
-    "Folk",
-    "World Music",
-    "Alternative",
-    "Rap",
-    "Punk",
-  ];
+  const {
+    state: { streamingHistory, user, token: authToken },
+    callbacks: { setOnboardingStatus },
+  } = useAuth();
 
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [selectedGenres, setSelectedGenres] = useState<Genre[]>([]);
   const [scrollPosition, setScrollPosition] = useState(0);
+  const { genres: fullGenreData } = useGenre();
+  const [{ lastIndex, genres }, setLoadedGenres] = useState(() => ({
+    lastIndex: 200,
+    genres: [...fullGenreData].splice(0, 20),
+  }));
+  const { numPerRow, size } = numGenrePerRow(10);
+
+  const genreWrapperWidth = size * genres.length;
+
+  const storeFavouriteGenre = async () => {
+    try {
+      const genreId = selectedGenres.map((genre) => genre.id);
+      setLoading(true);
+      const { data } = await axios.post(
+        `${BASE_URL}/users/${user?.id}/favourite_genre`,
+        {
+          genreId,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken?.token}`,
+          },
+        }
+      );
+      setOnboardingStatus(true);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let favouriteGenre: Genre[] = [];
+    if (fullGenreData.length) {
+      let data = streamingHistory?.favouriteArtists.items.map(
+        (item) => item.genres
+      );
+      if (data) {
+        const d = data.flat(1);
+        favouriteGenre = fullGenreData.filter((item) => d.includes(item.name));
+      }
+
+      const returnData = _.unionBy(
+        favouriteGenre,
+        [...fullGenreData].splice(0, 200),
+        "name"
+      );
+
+      setSelectedGenres((selectedGenre) => [
+        ...selectedGenre,
+        ...favouriteGenre,
+      ]);
+
+      setLoadedGenres({
+        lastIndex: 200,
+        genres: [...returnData].splice(0, 200),
+      });
+    }
+  }, [fullGenreData]);
+
+  const loadMore = () => {
+    const newLastIndex = lastIndex * 2;
+    const newGenres = [
+      ...genres,
+      ...fullGenreData.slice(lastIndex, newLastIndex),
+    ];
+    setLoadedGenres({ lastIndex: newLastIndex, genres: newGenres });
+  };
+
   const scrollViewRef = useRef<ScrollView>(null);
 
   const handlePress = (genreName: string) => {
-    const genreIndex = selectedGenres.indexOf(genreName);
+    const genreIndex = selectedGenres.findIndex(
+      (genre) => genre.name === genreName
+    );
     if (genreIndex !== -1) {
       setSelectedGenres([
         ...selectedGenres.slice(0, genreIndex),
         ...selectedGenres.slice(genreIndex + 1),
       ]);
     } else {
-      setSelectedGenres([...selectedGenres, genreName]);
+      const genre = genres.find((genre) => genre.name === genreName);
+      if (!genre) return;
+      setSelectedGenres((selected) => [...selected, genre]);
     }
   };
 
@@ -121,22 +193,32 @@ const SelectFavouriteGenres = (props: OnboardingScreenProps) => {
       </View>
       <VStack style={{ width, paddingLeft: 20 }} alignItems="center">
         <ScrollView
-          onScroll={(event) =>
-            setScrollPosition(event.nativeEvent.contentOffset.x)
-          }
+          onScroll={(event) => {
+            setScrollPosition(event.nativeEvent.contentOffset.x);
+            console.log(event.nativeEvent.contentOffset.x);
+          }}
           scrollEventThrottle={16}
-          contentContainerStyle={styles.genresList}
+          contentContainerStyle={[
+            styles.genresList,
+            { width: genreWrapperWidth },
+          ]}
           horizontal={true}
           ref={scrollViewRef}
           showsHorizontalScrollIndicator={false}
+          // onEndReached={() => loadMore()}
+          // onEndReachedThreshold={0}
+          // onMomentumScrollEnd={() => loadMore()}
+          // onEndReachedThreshold={0.5}
         >
           {genres.map((item, index) => (
-            <Genre
-              key={index}
-              genreName={item}
+            <GenreComponent
+              key={item.name}
+              genreName={item.name}
               size={100}
-              selected={selectedGenres.includes(item)}
-              onPress={() => handlePress(item)}
+              selected={selectedGenres.some(
+                (selectedGenre) => selectedGenre.name === item.name
+              )}
+              onPress={() => handlePress(item.name)}
             />
           ))}
         </ScrollView>
@@ -164,25 +246,29 @@ const SelectFavouriteGenres = (props: OnboardingScreenProps) => {
         }}
       >
         <TouchableHighlight
-          onPress={() => props.navigation.navigate("SelectFavouriteArtists")}
+          onPress={async () => storeFavouriteGenre()}
           style={styles.mainButton}
         >
-          <Text style={styles.mainButtonText}>Next</Text>
-          <Svg
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="#000"
-            width={25}
-            height={25}
-            style={{ marginLeft: 10 }}
-          >
-            <Path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
-            />
-          </Svg>
+          <View>
+            <Text style={styles.mainButtonText}>
+              {!isLoading ? "Next" : "Loading"}
+            </Text>
+            <Svg
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="#000"
+              width={25}
+              height={25}
+              style={{ marginLeft: 10 }}
+            >
+              <Path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
+              />
+            </Svg>
+          </View>
         </TouchableHighlight>
       </View>
     </View>
@@ -219,7 +305,6 @@ const createStyles = (theme: Theme) =>
       flexDirection: "row",
       height: 300,
       flexWrap: "wrap",
-      width: Dimensions.get("window").width + 200,
       alignItems: "center",
       justifyContent: "flex-start",
       marginTop: 20,

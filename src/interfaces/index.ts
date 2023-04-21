@@ -24,6 +24,9 @@ export type MainStackParamList = {
   People: undefined;
   Votes: undefined;
   Music: undefined;
+  Activity: undefined;
+  Following: undefined;
+  EditProfile: undefined;
   Record: { item: RecordData };
   Profile: { id: string | number };
 };

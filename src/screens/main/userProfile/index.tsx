@@ -6,6 +6,7 @@ import {
   TouchableHighlight,
   ScrollView,
 } from "react-native";
+import { useAuth } from "../../../hooks/useAuth";
 import { Text, VStack, View, HStack } from "native-base";
 import useTheme from "../../../hooks/useTheme";
 import Header from "./profileHeader";
@@ -16,7 +17,6 @@ import {
   ActivityCardProps,
 } from "../../../components/activityCard";
 import { MainScreenProps } from "../../../interfaces";
-import { TabView, SceneMap, TabBar } from "react-native-tab-view";
 
 const { width } = Dimensions.get("window");
 
@@ -165,6 +165,10 @@ interface SampleData {
 const ProfilePage: React.FC<MainScreenProps> = ({ navigation }) => {
   const [index, setIndex] = useState(0);
   const theme = useTheme();
+  const {
+    state: { user },
+  } = useAuth();
+
   return (
     <ScrollView
       scrollEventThrottle={16}
@@ -172,7 +176,7 @@ const ProfilePage: React.FC<MainScreenProps> = ({ navigation }) => {
       // onScroll={handleScroll}
     >
       <Header navigation={navigation} title={"Mayanma"} />
-      <BioSection />
+      <BioSection isUser={true} navigation={navigation} />
       <Segment
         style={{
           headerStyle: { paddingLeft: 20 },

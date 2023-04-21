@@ -1,256 +1,239 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
-  Text,
+  TextInput,
+  FlatList,
   StyleSheet,
-  TouchableHighlight,
-  ScrollView,
+  StatusBar,
   Image,
+  TouchableOpacity,
   Dimensions,
-  useWindowDimensions,
 } from "react-native";
-import { Svg, Path, Circle } from "react-native-svg";
-import { Progress, VStack } from "native-base";
-import { Theme } from "../../styles/theme";
+import { ScrollView, Text } from "native-base";
+import { useAuth } from "../../hooks/useAuth";
+import useArtistList from "../../hooks/useArtists";
+
+import { Ionicons } from "@expo/vector-icons";
 import useTheme from "../../hooks/useTheme";
+import ArtistThumbnail from "../../components/artistThumbnail";
+import { OnboardingScreenProps } from "../../interfaces";
 
-const Artist = ({
-  genreName,
-  size,
-  selected,
-  onPress,
-}: {
-  genreName: string;
-  size: number;
-  selected: boolean;
-  onPress: () => void;
-}) => {
+interface Genre {
+  id: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Artist {
+  id: number;
+  name: string;
+  bio: string;
+  image: string;
+  created_at: string;
+  updated_at: string;
+  genres: Genre[];
+}
+
+const FavouriteArtistsPage = (props: OnboardingScreenProps) => {
+  const {
+    state: { streamingHistory, user },
+    callbacks: { setOnboardingStatus },
+  } = useAuth();
+
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedArtists, setSelectedArtists] = useState<Artist[]>([]);
+  const { artists, handleSearch, fetchArtists, addFavoriteArtist, loading } =
+    useArtistList(false);
   const theme = useTheme();
-  const styles = StyleSheet.create({
-    genreButton: {
-      alignItems: "center",
-      justifyContent: "center",
-      flexDirection: "row",
-      padding: 15,
-      paddingHorizontal: 30,
-      marginRight: 20,
-      marginTop: 10,
-      borderRadius: 50,
-      height: 50,
-      borderWidth: 1,
-      borderColor: selected ? "none" : theme.colors.brand,
-      backgroundColor: selected ? theme.colors.white : "transparent",
-    },
-    genreText: {
-      fontSize: 14,
-      color: selected ? theme.colors.black : theme.colors.white,
-      fontWeight: "bold",
-    },
-    genreIcon: {
-      height: 20,
-      width: 20,
-      marginRight: 10,
-    },
-  });
 
-  return (
-    <TouchableHighlight style={styles.genreButton} onPress={onPress}>
-      <Text style={styles.genreText}>{genreName}</Text>
-    </TouchableHighlight>
-  );
-};
+  useEffect(() => {
+    if (artists.length && streamingHistory) {
+      const { favouriteArtists } = streamingHistory;
+      const selectedArtist = artists.filter((artist) => {
+        return (
+          favouriteArtists?.items.some((fave) => fave.name === artist.name) &&
+          !selectedArtists.some((sel) => sel.name === artist.name)
+        );
+      });
+      setSelectedArtists((prev) => [...prev, ...selectedArtist]);
+    }
+  }, [artists]);
 
-const SelectFavouriteGenres = () => {
-  const theme = useTheme();
-  const styles = createStyles(theme);
-  const { width } = useWindowDimensions();
-  const artists = [
-    "Michael Jackson",
-    "The Beatles",
-    "Eminem",
-    "Louis Armstrong",
-    "Beethoven",
-    "Black Sabbath",
-    "B.B. King",
-    "Johnny Cash",
-    "Daft Punk",
-    "Bob Marley",
-    "Carlos Gardel",
-    "Usher",
-    "Aretha Franklin",
-    "Bob Dylan",
-    "Toumani Diabaté",
-    "Radiohead",
-    "Kendrick Lamar",
-    "The Ramones",
-  ];
+  useEffect(() => {
+    const query = {
+      searchQuery: "",
+      limit: 50,
+      page: 1,
+    };
+    if (streamingHistory) {
+      console.log("Streaming history", streamingHistory.favouriteArtists);
+      let searchString: string[] | string =
+        streamingHistory.favouriteArtists?.items?.map(({ name }) => name) || [];
+      if (searchString.length) {
+        query.searchQuery = searchString.join(",");
+      }
+    }
+    fetchArtists(query);
+  }, []);
 
-  const [selectedArtists, setSelectedArtists] = useState<string[]>([]);
-  const [scrollPosition, setScrollPosition] = useState(20);
-  const scrollViewRef = useRef<ScrollView>(null);
-
-  const handlePress = (artistName: string) => {
-    const genreIndex = selectedArtists.indexOf(artistName);
-    if (genreIndex !== -1) {
-      setSelectedArtists([
-        ...selectedArtists.slice(0, genreIndex),
-        ...selectedArtists.slice(genreIndex + 1),
-      ]);
+  const handleArtistSelect = (artist: Artist): void => {
+    const isAlreadySelected: boolean = selectedArtists.some(
+      (selectedArtist) => selectedArtist.id === artist.id
+    );
+    if (isAlreadySelected) {
+      setSelectedArtists(
+        selectedArtists.filter(
+          (selectedArtist) => selectedArtist.id !== artist.id
+        )
+      );
     } else {
-      setSelectedArtists([...selectedArtists, artistName]);
+      setSelectedArtists([...selectedArtists, artist]);
     }
   };
 
+  const renderArtistThumbnail = ({ item }: { item: Artist }): JSX.Element => (
+    <ArtistThumbnail
+      artist={{ name: item.name, thumbnailUrl: item.image, id: item.id }}
+      onPress={() => handleArtistSelect(item)}
+      isSelected={selectedArtists.some(
+        (selectedArtist) => selectedArtist.id === item.id
+      )}
+    />
+  );
+
+  const isNextButtonVisible = selectedArtists.length > 0;
+
   return (
-    <View style={styles.container}>
-      <View
-        style={{ padding: 20, alignItems: "center", justifyContent: "center" }}
-      >
-        <Image
-          source={{
-            uri: "https://res.cloudinary.com/drda29q8x/image/upload/v1676158144/logos/Group_88_qxl6bc.png",
+    <>
+      <StatusBar backgroundColor={theme.colors.darkGrey} />
+      <View style={styles.container}>
+        <View style={styles.searchBarContainer}>
+          <Ionicons name="ios-search" size={20} color="#777" />
+          <TextInput
+            style={styles.searchBar}
+            placeholder="Search for artists..."
+            onChangeText={handleSearch}
+            value={searchQuery}
+          />
+        </View>
+        <View style={styles.selectedArtistsContainer}>
+          {selectedArtists.length ? (
+            <ScrollView horizontal>
+              {selectedArtists.map((artist) => (
+                <Image
+                  key={artist.id}
+                  style={{
+                    width: 50,
+                    height: 50,
+                    marginRight: 10,
+                    borderRadius: 100,
+                  }}
+                  source={{ uri: artist.image }}
+                />
+              ))}
+            </ScrollView>
+          ) : (
+            <Text
+              style={{
+                color: "white",
+                fontSize: 18,
+                paddingTop: 10,
+                fontWeight: "bold",
+              }}
+            >
+              Select Your Favourite Artists
+            </Text>
+          )}
+        </View>
+        <FlatList
+          data={artists?.filter((artist) =>
+            artist.name.toLowerCase().includes(searchQuery.toLowerCase())
+          )}
+          keyExtractor={(item) => `${item.id}`}
+          columnWrapperStyle={{
+            justifyContent: "space-between",
+            marginVertical: 10,
           }}
-          style={{ width: 100, height: 100 }}
+          renderItem={renderArtistThumbnail}
+          numColumns={3}
+          contentContainerStyle={styles.artistThumbnailsContainer}
         />
-        <Text style={styles.mainText}>Follow your favourite artist</Text>
-        <Text style={styles.supportingText}>
-          Follow your favourite genre so you can connect with communities and
-          artistes you like
-        </Text>
-      </View>
-      <VStack style={{ width, paddingLeft: 20 }} alignItems="center">
-        <ScrollView
-          onScroll={(event) =>
-            setScrollPosition(
-              event.nativeEvent.contentOffset.x > 20
-                ? event.nativeEvent.contentOffset.x
-                : 20
-            )
-          }
-          scrollEventThrottle={16}
-          contentContainerStyle={styles.genresList}
-          horizontal={true}
-          ref={scrollViewRef}
-          showsHorizontalScrollIndicator={false}
-        >
-          {artists.map((item, index) => (
-            <Artist
-              key={index}
-              genreName={item}
-              size={100}
-              selected={selectedArtists.includes(item)}
-              onPress={() => handlePress(item)}
-            />
-          ))}
-        </ScrollView>
-        <Progress
-          bg={"#21333D"}
-          _filledTrack={{
-            bg: theme.colors.white,
-          }}
-          style={{
-            width: width - 40,
-            height: 5,
-            marginLeft: 20,
-            marginRight: 20,
-            marginTop: 20,
-          }}
-          value={scrollPosition}
-        />
-      </VStack>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "flex-end",
-          width,
-          paddingRight: 20,
-        }}
-      >
-        <TouchableHighlight style={styles.mainButton}>
-          <Text style={styles.mainButtonText}>Next</Text>
-          <Svg
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="#000"
-            width={25}
-            height={25}
-            style={{ marginLeft: 10 }}
+        {isNextButtonVisible && (
+          <TouchableOpacity
+            style={[
+              styles.nextButton,
+              { backgroundColor: theme.colors.brand, borderRadius: 50 },
+            ]}
+            onPress={async () => {
+              try {
+                if (!user) return;
+                await addFavoriteArtist(
+                  user.id,
+                  selectedArtists.map((selected) => selected.id)
+                );
+                props.navigation.navigate("SelectFavouriteGenres");
+              } catch (error) {
+                console.log(error);
+              }
+            }}
           >
-            <Path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
-            />
-          </Svg>
-        </TouchableHighlight>
+            <Text style={styles.nextButtonText}>
+              {loading ? "Loading" : "Continue"}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
-    </View>
+    </>
   );
 };
 
-const createStyles = (theme: Theme) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: "#07171F",
-    },
-    icon: {
-      width: 50,
-      height: 50,
-    },
-    mainText: {
-      fontSize: 22,
-      marginTop: 20,
-      color: theme.colors.white,
-      textAlign: "center",
-      fontWeight: "bold",
-    },
-    supportingText: {
-      fontSize: 14,
-      marginTop: 20,
-      fontWeight: "bold",
-      color: theme.colors.white,
-      textAlign: "center",
-    },
-    genresList: {
-      flexDirection: "row",
-      height: 300,
-      flexWrap: "wrap",
-      width: Dimensions.get("window").width + 200,
-      alignItems: "center",
-      justifyContent: "flex-start",
-      marginTop: 20,
-    },
-    progessWrapper: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "flex-start",
-      width: Dimensions.get("window").width,
-      margin: 20,
-      height: 10,
-      bottom: 0,
-      position: "absolute",
-    },
-    mainButton: {
-      backgroundColor: theme.colors.brand,
-      padding: 10,
-      paddingHorizontal: 40,
-      height: 53,
-      marginTop: 30,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      borderRadius: 50,
-    },
-    mainButtonText: {
-      color: theme.colors.black,
-      textAlign: "center",
-      fontSize: 16,
-      fontWeight: "bold",
-    },
-  });
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    marginTop: 30,
+    paddingHorizontal: 10,
+    paddingTop: 20,
+    backgroundColor: "black",
+  },
+  searchBarContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 5,
+    borderRadius: 20,
+    backgroundColor: "black",
+  },
+  searchBar: {
+    flex: 1,
+    marginLeft: 10,
+  },
+  artistThumbnailsContainer: {
+    flexGrow: 1,
+    paddingTop: 10,
+  },
+  selectedArtistsContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    borderWidth: 1,
+  },
+  nextButton: {
+    backgroundColor: "white",
+    flexDirection: "row",
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    justifyContent: "center",
+    borderRadius: 10,
+    width: "100%",
+    marginBottom: 50,
+    alignSelf: "flex-end",
+    marginVertical: 10,
+  },
+  nextButtonText: {
+    color: "black",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+});
 
-export default SelectFavouriteGenres;
+export default FavouriteArtistsPage;

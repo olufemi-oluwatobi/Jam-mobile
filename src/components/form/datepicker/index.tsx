@@ -1,31 +1,33 @@
 import React from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TextInputProps,
-} from "react-native";
+import { View, Text, StyleSheet, useWindowDimensions } from "react-native";
+import DateTimePicker, {
+  BaseProps,
+} from "@react-native-community/datetimepicker";
 import { Theme } from "../../../styles/theme";
 import useTheme from "../../../hooks/useTheme";
 
-interface InputProps extends TextInputProps {
+interface InputProps extends BaseProps {
   label: string;
   error?: string | false | null | undefined;
+  mode?: "date" | "time" | "datetime";
 }
 
-const Input: React.FC<InputProps> = (props) => {
+const DatePicker: React.FC<InputProps> = (props) => {
   const theme = useTheme();
-  const { label, error, ...rest } = props;
+  const { width } = useWindowDimensions();
+  const { label, error, mode, ...rest } = props;
   const styles = createStyles(theme);
 
   return (
     <View style={styles.inputContainer}>
       <Text style={styles.inputLabel}>{label}</Text>
-      <TextInput
-        placeholderTextColor={theme.colors.grey}
+      <DateTimePicker
+        mode={mode}
         {...rest}
-        style={styles.input}
+        customStyles={{
+          dateInput: { flexGrow: 1 },
+        }}
+        style={{ flex: 1, borderColor: "red", borderWidth: 1 }}
       />
       {error ? <Text style={styles.errorMessage}>{error}</Text> : null}
     </View>
@@ -35,7 +37,7 @@ const Input: React.FC<InputProps> = (props) => {
 const createStyles = (theme: Theme) => {
   return StyleSheet.create({
     inputContainer: {
-      marginBottom: 20,
+      marginBottom: 10,
     },
     inputLabel: {
       color: theme.colors.white,
@@ -53,8 +55,9 @@ const createStyles = (theme: Theme) => {
       padding: 10,
       height: 53,
       borderRadius: 5,
+      marginBottom: 15,
     },
   });
 };
 
-export default Input;
+export default DatePicker;

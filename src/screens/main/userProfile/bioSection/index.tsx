@@ -1,7 +1,15 @@
 import React from "react";
 import useTheme from "../../../../hooks/useTheme";
-import { View, Text, StyleSheet, useWindowDimensions } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  useWindowDimensions,
+  TouchableHighlight,
+} from "react-native";
+import { useAuth } from "../../../../hooks/useAuth";
 import { Avatar, HStack, VStack, Button } from "native-base";
+import { MainScreenProps } from "../../../../interfaces";
 
 const FollowerButton = ({ isFollower }: { isFollower: boolean }) => {
   const { colors } = useTheme();
@@ -23,9 +31,17 @@ const FollowerButton = ({ isFollower }: { isFollower: boolean }) => {
   );
 };
 
-const BioSection = () => {
+const BioSection = ({
+  navigation,
+  isUser,
+}: MainScreenProps & { isUser?: boolean }) => {
   const { width } = useWindowDimensions();
   const theme = useTheme();
+
+  const {
+    state: { user },
+  } = useAuth();
+
   return (
     <VStack style={styles.container}>
       <HStack style={{ alignItems: "center", justifyContent: "space-between" }}>
@@ -43,17 +59,45 @@ const BioSection = () => {
               <Text style={styles.value}>7 days</Text>
               <Text style={styles.label}>Streak</Text>
             </VStack>
-            <VStack style={styles.row}>
-              <Text style={styles.value}>1,234</Text>
-              <Text style={styles.label}>Followers</Text>
-            </VStack>
-            <VStack style={styles.row}>
-              <Text style={styles.value}>567</Text>
-              <Text style={styles.label}>Following</Text>
-            </VStack>
+            <TouchableHighlight
+              onPress={() => navigation.navigate("Following")}
+            >
+              <VStack style={styles.row}>
+                <Text style={styles.value}>1,234</Text>
+                <Text style={styles.label}>Followers</Text>
+              </VStack>
+            </TouchableHighlight>
+            <TouchableHighlight
+              onPress={() => navigation.navigate("Following")}
+            >
+              <VStack style={styles.row}>
+                <Text style={styles.value}>567</Text>
+                <Text style={styles.label}>Following</Text>
+              </VStack>
+            </TouchableHighlight>
           </HStack>
           <View>
-            <FollowerButton isFollower={true} />
+            {!isUser ? (
+              <FollowerButton isFollower={true} />
+            ) : (
+              <TouchableHighlight
+                style={{
+                  borderWidth: 1,
+                  borderColor: "#666",
+                  marginTop: 20,
+                  borderRadius: 100,
+                  paddingHorizontal: 20,
+                  paddingVertical: 10,
+                }}
+                onPress={() => navigation.navigate("EditProfile")}
+              >
+                <Text
+                  style={{ fontSize: 12, color: "white", fontWeight: "bold" }}
+                >
+                  Edit Profile
+                </Text>
+              </TouchableHighlight>
+            )}
           </View>
         </VStack>
       </HStack>

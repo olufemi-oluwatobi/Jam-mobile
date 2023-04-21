@@ -1,5 +1,13 @@
 import React, { useEffect, useReducer } from "react";
+import { format, parseISO, isPast } from "date-fns";
+import axios from "axios";
+import {
+  retrieveData,
+  storeData,
+  deleteData,
+} from "../helpers/handleAsyncStorageActions";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { BASE_URL } from "../constants";
 
 export interface User {
   id: number;
@@ -17,11 +25,56 @@ export interface User {
   updated_at: string;
 }
 
+export interface StreamingData {
+  trackHistory: {
+    name: string;
+    artist: string;
+    album: string;
+    datePlayed: string;
+  }[];
+  playlists: {
+    name: string;
+    description: string;
+    tracks: {
+      name: string;
+      artist: string;
+      album: string;
+    }[];
+  }[];
+  metadata: {
+    name: string;
+    email: string;
+    country: string;
+  };
+  favouriteArtists: {
+    href: string;
+    items: {
+      name: string;
+      followers: number;
+      genres: string[];
+    }[];
+  };
+  favoriteTracks: {
+    name: string;
+    artist: string;
+    album: string;
+  }[];
+}
+
+export type Token = { expires_at: string; token: string; type: string };
+
+export type StreamServiceMeta = {
+  serviceName: string;
+  accessCode: string;
+};
 interface State {
   isLoading: boolean;
   error: string | null;
   user: User | null;
-  token: string | null;
+  isOnboarded: boolean;
+  streamingHistory: null | StreamingData;
+  token: Token | null;
+  streamServiceMeta: StreamServiceMeta[] | null;
 }
 
 interface Action {
@@ -29,11 +82,18 @@ interface Action {
     | "LOGIN_COMPLETE"
     | "SIGN_UP_COMPLETE"
     | "ONBOARDING_COMPLETE"
-    | "LOGOUT";
+    | "LOGOUT"
+    | "UPDATE_STREAMING_HISTORY"
+    | "STORE_STREAM_SERVICE_META"
+    | "UPDATE_ONBOARDING_STATUS";
+
   payload?: {
     user?: User;
-    token?: string;
+    token?: Token;
     error?: string;
+    streamingHistory?: any;
+    streamServiceMeta?: StreamServiceMeta;
+    isOnboarded?: boolean;
   };
 }
 
@@ -41,7 +101,10 @@ const initialState: State = {
   isLoading: false,
   error: null,
   user: null,
+  streamingHistory: null,
   token: null,
+  streamServiceMeta: null,
+  isOnboarded: false,
 };
 
 const AUTH_TOKEN_STORAGE_NAME = "@JAM_AUTH_TOKEN";
@@ -53,6 +116,30 @@ const authReducer = (state: State, action: Action): State => {
         ...state,
         user: action.payload?.user || null,
         token: action.payload?.token || null,
+      };
+    case "UPDATE_STREAMING_HISTORY":
+      console.log("UPDATE_STREAMING_HISTORY", action.payload?.streamingHistory);
+      return {
+        ...state,
+        streamingHistory: action.payload?.streamingHistory || null,
+      };
+
+    case "UPDATE_ONBOARDING_STATUS":
+      return {
+        ...state,
+        isOnboarded: action.payload?.isOnboarded || false,
+      };
+
+    case "STORE_STREAM_SERVICE_META":
+      console.log("STORE META DATA");
+      return {
+        ...state,
+        streamServiceMeta: state.streamServiceMeta
+          ? [
+              ...state.streamServiceMeta,
+              action?.payload?.streamServiceMeta as StreamServiceMeta,
+            ]
+          : [action?.payload?.streamServiceMeta as StreamServiceMeta] || null,
       };
     case "SIGN_UP_COMPLETE":
       return {
@@ -72,57 +159,108 @@ const authReducer = (state: State, action: Action): State => {
   }
 };
 
+type Callbacks = {
+  setOnboardingStatus: (status: boolean) => void;
+};
+
 interface AuthContextValue {
   state: State;
   dispatch: React.Dispatch<Action>;
+  callbacks: Callbacks;
 }
 
 const AuthContext = React.createContext<AuthContextValue>(
   {} as AuthContextValue
 );
 
-// Function to store data in local storage
-export const storeData = async (key: string, value: { [k: string]: any }) => {
-  try {
-    await AsyncStorage.setItem(key, JSON.stringify(value));
-  } catch (error) {
-    console.error(`Error storing data: ${error}`);
-  }
-};
-
-// Function to retrieve data from local storage
-export const retrieveData = async (key: string) => {
-  try {
-    const value = await AsyncStorage.getItem(key);
-    if (value !== null) {
-      const data = JSON.parse(value);
-      //   dispatch({ type: "LOGIN_COMPLETE", payload: { token: data.token } });
-    }
-    return null;
-  } catch (error) {
-    console.error(`Error retrieving data: ${error}`);
-  }
-};
-
-// Function to delete data from local storage
-export const deleteData = async (key: string) => {
-  try {
-    await AsyncStorage.removeItem(key);
-  } catch (error) {
-    console.error(`Error deleting data: ${error}`);
-  }
-};
+const STREAM_SERVICE_METADATA = "STREAM_SERVICE_METADATA";
+const STREAMING_HISTORY = "STREAMING_HISTORY";
+const ONBOARDING_STATUS_HISTORY = "ONBOARDING_STATUS_HISTORY";
 
 const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  const retrieveData = async (key: string) => {
+  useEffect(() => {
+    const storeStreamServiceMetaData = async () => {
+      AsyncStorage.setItem(
+        STREAM_SERVICE_METADATA,
+        JSON.stringify(state.streamServiceMeta || null)
+      );
+    };
+    storeStreamServiceMetaData();
+  }, [state.streamServiceMeta]);
+
+  useEffect(() => {
+    if (state.streamingHistory) {
+      storeData(STREAMING_HISTORY, state.streamingHistory);
+    }
+  }, [state.streamingHistory]);
+
+  const setOnboardingStatus = (
+    status: boolean,
+    storeInLocalStorage: boolean = true
+  ) => {
+    console.log(status);
+    if (storeInLocalStorage) {
+      storeData(ONBOARDING_STATUS_HISTORY, { isOnboarded: status });
+    }
+    dispatch({
+      type: "UPDATE_ONBOARDING_STATUS",
+      payload: { isOnboarded: status },
+    });
+  };
+  const hydrateStreamingHistoryState = async () => {
+    const streamingServiceMetadata = await retrieveData(
+      STREAM_SERVICE_METADATA
+    );
+    const streamingHistory = await retrieveData(STREAMING_HISTORY);
+    const onboardingStatus = await retrieveData(ONBOARDING_STATUS_HISTORY);
+    if (streamingServiceMetadata) {
+      dispatch({
+        type: "STORE_STREAM_SERVICE_META",
+        payload: streamingServiceMetadata,
+      });
+    }
+    if (onboardingStatus) {
+      setOnboardingStatus(onboardingStatus.isOnboarded, false);
+    }
+    if (streamingHistory) {
+      dispatch({
+        type: "UPDATE_STREAMING_HISTORY",
+        payload: streamingHistory,
+      });
+    }
+  };
+
+  const getUserInformation = async () => {
+    try {
+      const { token: authToken } = state;
+      const response = await axios.get(`${BASE_URL}/user/me`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken?.token}`,
+        },
+      });
+      console.log(response);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const retrieveAuthData = async (key: string) => {
     try {
       const value = await AsyncStorage.getItem(key);
-      console.log("value", value);
       if (value !== null) {
         const data = JSON.parse(value);
+        let expiry = data?.token?.expires_at;
+        expiry = parseISO(expiry);
+        const hasExpired = isPast(expiry);
+        if (hasExpired) {
+          deleteData(AUTH_TOKEN_STORAGE_NAME);
+          dispatch({ type: "LOGOUT" });
+          return null;
+        }
         dispatch({ type: "LOGIN_COMPLETE", payload: data });
+        getUserInformation();
       }
       return null;
     } catch (error) {
@@ -131,11 +269,11 @@ const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   };
 
   useEffect(() => {
-    retrieveData(AUTH_TOKEN_STORAGE_NAME);
+    hydrateStreamingHistoryState();
+    retrieveAuthData(AUTH_TOKEN_STORAGE_NAME);
   }, []);
   useEffect(() => {
     if (state.token) {
-      console.log("Data stored");
       storeData(AUTH_TOKEN_STORAGE_NAME, state);
     } else {
       deleteData(AUTH_TOKEN_STORAGE_NAME);
@@ -143,7 +281,9 @@ const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   }, [state.token]);
 
   return (
-    <AuthContext.Provider value={{ state, dispatch }}>
+    <AuthContext.Provider
+      value={{ state, dispatch, callbacks: { setOnboardingStatus } }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Image } from "native-base";
+import { View } from "native-base";
 import SplashScreen from "./splash";
 import { StyleSheet, Dimensions } from "react-native";
 import {
@@ -15,11 +15,7 @@ import {
   SelectFavouriteGenres,
   SelectFavouriteArtists,
 } from "./onboarding";
-import {
-  AuthStackParamList,
-  OnboardingStackParamList,
-  MainStackParamList,
-} from "../interfaces";
+import { AuthStackParamList, OnboardingStackParamList } from "../interfaces";
 import { useAuth } from "../hooks/useAuth";
 const window = Dimensions.get("window");
 
@@ -30,19 +26,12 @@ type OnboardingScreenProps = {
   navigation: NativeStackNavigationProp<OnboardingStackParamList, "Onboarding">;
 };
 
-const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ navigation }) => {
-  return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Text>Onboarding Screen</Text>
-    </View>
-  );
-};
-
 const Screens = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
-  const [isOnboarding, setIsOnboarding] = useState(true);
-
+  const {
+    state: { user, isOnboarded },
+  } = useAuth();
+  console.log(isOnboarded);
   useEffect(() => {
     if (isLoading) {
       setTimeout(() => {
@@ -75,7 +64,7 @@ const Screens = () => {
         </AuthStack.Navigator>
       );
     }
-    if (user && !isOnboarding) {
+    if (user && !isOnboarded) {
       return (
         <OnboardingStack.Navigator>
           <OnboardingStack.Screen

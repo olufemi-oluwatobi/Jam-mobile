@@ -1,13 +1,13 @@
 import React, { FC } from "react";
-import {
-  createBottomTabNavigator,
-  BottomTabNavigationProp,
-} from "@react-navigation/bottom-tabs";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomeScreen from "./home";
+import ActivityScreen from "./activities";
+import EditProfilePage from "./userProfile/edit";
+import VotesScreen from "./voting";
 import RecordScreen from "./record";
 import ProfileScreen from "./userProfile";
+import FollowingScreen from "./following";
 import { Ionicons } from "@expo/vector-icons";
-import { View, Text } from "react-native";
 import { MainStackParamList } from "../../interfaces";
 
 const Tab = createBottomTabNavigator<MainStackParamList>();
@@ -16,16 +16,9 @@ const icons = {
   Home: ["ios-home", "ios-home-outline"],
   People: ["ios-people", "ios-people-outline"],
   Record: ["ios-people", "ios-people-outline"],
+  Activity: ["ios-flash", "ios-flash-outline"],
   Votes: ["ios-checkmark-circle", "ios-checkmark-circle-outline"],
   Music: ["ios-musical-notes", "ios-musical-notes-outline"],
-};
-
-const VotesScreen = () => {
-  return (
-    <View>
-      <Text>VotesScreen</Text>
-    </View>
-  );
 };
 
 const MainScreen: FC = () => {
@@ -60,6 +53,13 @@ const MainScreen: FC = () => {
       <Tab.Screen
         options={{
           headerShown: false,
+        }}
+        name="Activity"
+        component={ActivityScreen}
+      />
+      <Tab.Screen
+        options={{
+          headerShown: false,
           tabBarButton: () => null,
         }}
         name="Record"
@@ -70,8 +70,25 @@ const MainScreen: FC = () => {
           headerShown: false,
           tabBarButton: () => null,
         }}
+        name="Following"
+        component={FollowingScreen}
+      />
+      <Tab.Screen
+        options={{
+          headerShown: false,
+          tabBarButton: () => null,
+        }}
         name="Profile"
         component={ProfileScreen}
+      />
+
+      <Tab.Screen
+        options={{
+          headerShown: false,
+          tabBarButton: () => null,
+        }}
+        name="EditProfile"
+        component={EditProfilePage}
       />
       <Tab.Screen
         options={{

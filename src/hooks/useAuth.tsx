@@ -3,11 +3,12 @@ import { useQueryClient, useMutation, UseMutateFunction } from "react-query";
 import axios, { AxiosError } from "axios";
 import Constants from "expo-constants";
 import { User } from "../contexts/auth";
-import { AuthContext } from "../contexts/auth";
+import { BASE_URL } from "../constants";
+import { AuthContext, Token } from "../contexts/auth";
 
 interface LoginData {
   user: User;
-  token: string;
+  token: Token;
 }
 
 interface LoginPayload {
@@ -23,13 +24,12 @@ interface LogoutResult {
   logout: () => void;
 }
 
-const BASE_URL = "https://78b5-41-184-171-72.eu.ngrok.io/api/v1"; //Constants?.manifest?.extra?.BASE_URL;
-console.log("Base urllll====>", BASE_URL, process.env.BASE_URL);
+// const BASE_URL = "https://da0d-41-184-51-49.eu.ngrok.io/api/v1"; //Constants?.manifest?.extra?.BASE_URL;
 // useAuth hook
 // Returns the state from the AuthContext
 const useAuth = () => {
-  const { state } = useContext(AuthContext);
-  return { ...state };
+  const { state, dispatch, callbacks } = useContext(AuthContext);
+  return { state, dispatch, callbacks };
 };
 
 // useRegister hook
@@ -48,15 +48,11 @@ const useRegister = (): {
   // Function to make a post request to the 'https://employee.free.beeceptor.com/create' endpoint with the RegisterPayload data
   const register = async (data: LoginPayload) => {
     try {
-      console.log("IN here", data);
       const url = `${BASE_URL}/auth/register`;
-      console.log(url);
       const { data: response } = await axios.post(`${url}`, data);
-      console.log(response, "response");
       return response;
     } catch (error: any) {
       console.log(error);
-      throw Error(error);
     }
   };
 
@@ -139,6 +135,46 @@ const useLogin = (): {
   };
 };
 
+const useUserInformation = (): {
+  getUserData: UseMutateFunction<LoginData, any, LoginPayload>;
+  isLoading: boolean;
+  error: any;
+} => {
+  const { state, dispatch } = useContext(AuthContext);
+  if (!state) {
+    throw new Error("useLogin must be used within a AuthProvider");
+  }
+
+  const baseUrl = Constants?.manifest?.extra?.BASE_URL;
+
+  const login = async () => {
+    const { data: response } = await axios.get(`${BASE_URL}/auth/me`);
+    console.log(response);
+    return response;
+  };
+
+  const queryClient = useQueryClient();
+
+  const { mutate, isLoading, error } = useMutation<LoginData, any, any>(login, {
+    onSuccess: (data) => {
+      dispatch({
+        type: "LOGIN_COMPLETE",
+        payload: { user: data.user, token: data.token },
+      });
+    },
+    onError: () => {},
+    onSettled: () => {
+      queryClient.invalidateQueries("create");
+    },
+  });
+
+  return {
+    getUserData: mutate,
+    isLoading,
+    error,
+  };
+};
+
 // useLogout hook
 // Returns an object with a logout function which dispatches an action of type 'LOGOUT'
 const useLogout = (): LogoutResult => {
@@ -158,4 +194,4 @@ const useLogout = (): LogoutResult => {
   return { logout };
 };
 
-export { useLogin, useLogout, useRegister, useAuth };
+export { useLogin, useLogout, useRegister, useAuth, useUserInformation };

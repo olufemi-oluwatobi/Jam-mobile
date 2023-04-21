@@ -17,7 +17,7 @@ import useTheme from "../../hooks/useTheme";
 import { OnboardingScreenProps } from "../../interfaces";
 import { useAuth } from "../../hooks/useAuth";
 import { Theme } from "../../styles/theme";
-import { VStack } from "native-base";
+import { HStack, VStack } from "native-base";
 import Svg, { Path } from "react-native-svg";
 
 const createStyles = (theme: Theme) => {
@@ -106,7 +106,9 @@ const createStyles = (theme: Theme) => {
   });
 };
 const LoginPage = (props: OnboardingScreenProps) => {
-  const { user } = useAuth();
+  const {
+    state: { user },
+  } = useAuth();
   const theme = useTheme();
   const styles = createStyles(theme);
 
@@ -142,22 +144,24 @@ const LoginPage = (props: OnboardingScreenProps) => {
                 onPress={() => props.navigation.navigate("ConnectStreamApp")}
                 style={styles.mainButton}
               >
-                <Text style={styles.mainButtonText}>Let's Start</Text>
-                <Svg
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="#000"
-                  width={25}
-                  height={25}
-                  style={{ marginLeft: 10 }}
-                >
-                  <Path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
-                  />
-                </Svg>
+                <HStack>
+                  <Text style={styles.mainButtonText}>Let's Start</Text>
+                  <Svg
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="#000"
+                    width={25}
+                    height={25}
+                    style={{ marginLeft: 10 }}
+                  >
+                    <Path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
+                    />
+                  </Svg>
+                </HStack>
               </TouchableHighlight>
             </View>
           </View>

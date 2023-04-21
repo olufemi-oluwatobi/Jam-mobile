@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -137,8 +137,14 @@ const createStyles = (theme: Theme) => {
     },
   });
 };
-const LoginPage = (props: AuthScreenProps) => {
-  const auth = useAuth();
+const LoginMF = (props: AuthScreenProps) => {
+  const {
+    state: { user },
+  } = useAuth();
+
+  useEffect(() => {
+    if (user) console.log(user);
+  }, [user]);
   const { login } = useLogin();
 
   const form = useFormik({
@@ -149,10 +155,13 @@ const LoginPage = (props: AuthScreenProps) => {
     validationSchema: SignInValidation,
     onSubmit: async (value) => {
       try {
+        console.log(value);
         login(value);
       } catch (error) {}
     },
   });
+
+  console.log(form.errors);
 
   const theme = useTheme();
   const styles = createStyles(theme);
@@ -182,6 +191,7 @@ const LoginPage = (props: AuthScreenProps) => {
                 placeholder="Enter your email address"
                 onChangeText={form.handleChange("email")}
                 value={form.values.email}
+                error={form.errors.email}
               />
               <Input
                 label="Password"
@@ -189,6 +199,7 @@ const LoginPage = (props: AuthScreenProps) => {
                 placeholder="Enter your password"
                 onChangeText={form.handleChange("password")}
                 value={form.values.password}
+                error={form.errors.password}
               />
 
               <PageDivider />
@@ -370,7 +381,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginPage;
+export default LoginMF;
 
 const PageDivider = () => {
   const theme = useTheme();

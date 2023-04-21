@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   TouchableHighlight,
   Dimensions,
 } from "react-native";
+import { useSpotify } from "../../hooks/useSpotify";
+import { useAuth } from "../../hooks/useAuth";
 import { OnboardingScreenProps } from "../../interfaces";
 import { Theme } from "../../styles/theme";
 import useTheme from "../../hooks/useTheme";
@@ -14,18 +16,22 @@ import useTheme from "../../hooks/useTheme";
 const Service = ({
   serviceName,
   logoUrl,
+  onPress,
 }: {
   serviceName: string;
   logoUrl: string;
+  onPress: () => void;
 }) => {
   const theme = useTheme();
   const styles = createStyles(theme);
 
   return (
-    <View style={styles.serviceButton}>
-      <Image source={{ uri: logoUrl }} style={styles.serviceLogo} />
-      <Text style={styles.serviceText}>{serviceName}</Text>
-    </View>
+    <TouchableHighlight onPress={() => onPress()}>
+      <View style={styles.serviceButton}>
+        <Image source={{ uri: logoUrl }} style={styles.serviceLogo} />
+        <Text style={styles.serviceText}>{serviceName}</Text>
+      </View>
+    </TouchableHighlight>
   );
 };
 
@@ -104,17 +110,31 @@ const createStyles = (theme: Theme) => {
 const ConnectStreamApp = ({ navigation }: OnboardingScreenProps) => {
   const theme = useTheme();
   const styles = createStyles(theme);
+  const { handleAuth } = useSpotify();
+  const {
+    state: { streamingHistory, streamServiceMeta },
+  } = useAuth();
+
+  useEffect(() => {
+    console.log(streamServiceMeta);
+    if (streamingHistory && streamServiceMeta?.length) {
+      navigation.navigate("SelectFavouriteArtists");
+    }
+  }, [streamingHistory]);
   const services = [
     {
       name: "Apple Music",
+      onPress: () => handleAuth(),
       logo: "https://res.cloudinary.com/drda29q8x/image/upload/v1661291908/logos/spotify-logo-png-7061_tmgb84.png",
     },
     {
       name: "Spotify",
+      onPress: () => handleAuth(),
       logo: "https://res.cloudinary.com/drda29q8x/image/upload/v1661291908/logos/spotify-logo-png-7061_tmgb84.png",
     },
     {
       name: "Google Play Music",
+      onPress: () => handleAuth(),
       logo: "https://res.cloudinary.com/drda29q8x/image/upload/v1661291908/logos/spotify-logo-png-7061_tmgb84.png",
     },
   ];
@@ -136,6 +156,7 @@ const ConnectStreamApp = ({ navigation }: OnboardingScreenProps) => {
       <View style={styles.buttonContainer}>
         {services.map((service) => (
           <Service
+            onPress={service.onPress}
             key={service.name}
             serviceName={service.name}
             logoUrl={service.logo}

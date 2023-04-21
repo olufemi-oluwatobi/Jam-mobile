@@ -138,7 +138,7 @@ const SignInValidation = Yup.object({
   password: Yup.string().required("Password is required"),
 });
 
-const LoginPage = (props: AuthScreenProps) => {
+const SignUpPage = (props: AuthScreenProps) => {
   const auth = useAuth();
   const { registerUser, isLoading } = useRegister();
 
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginPage;
+export default SignUpPage;
 
 const PageDivider = () => {
   const theme = useTheme();
